@@ -1,6 +1,6 @@
 # 🌽 AgroPredict — AI-Driven Maize Disease Diagnostics & Yield Estimation
 
-AgroPredict is an end-to-end agricultural intelligence system that combines **computer vision**, **machine learning**, and **generative AI** to help maize farmers diagnose crop diseases, predict yield losses, and receive actionable agronomic recommendations — all from a single leaf image and environmental sensor data.
+AgroPredict is a highly impactful, farmer-centric agricultural decision support system designed to assist maize farmers in maximizing crop health and productivity. Built using a unified system that combines **computer vision**, **machine learning**, and **generative AI**, it enables farmers to instantly diagnose crop diseases from a leaf photo, estimate potential yield losses, and receive highly tailored agronomic recommendations directly from real-time environmental sensor data.
 
 ---
 
@@ -70,7 +70,7 @@ flowchart LR
 ## 📁 Project Structure
 
 ```
-Model_A/
+AgroPredict/ (Project Root)
 ├── main.py                  # FastAPI backend — orchestrates the full pipeline
 ├── schemas.py               # Pydantic request/response models
 ├── model_a.py               # Model A — EfficientNetV2-S disease classifier + Model B (DSI)
@@ -81,24 +81,26 @@ Model_A/
 ├── index.html               # Frontend dashboard (served at /)
 ├── data_flow.html           # Interactive system architecture diagram (served at /data_flow)
 │
-├── model_a_weights.pth      # Trained CNN weights (~80 MB)
-├── model_cRF_weights.pkl    # Trained Random Forest weights (~50 MB)
+├── model_a_weights.pth      # Trained CNN weights (~81.6 MB)
+├── model_cRF_weights.pkl    # Trained Random Forest weights (~52.2 MB)
 ├── model_cRF_scaler.pkl     # Feature scaler for Model C
 ├── model_cRF_config.json    # Model C training metadata
 ├── class_names.txt          # Disease class labels
 │
-├── yield-predict.csv        # Original maize yield dataset (1,659 rows)
-├── yield-predict-augmented.csv  # Augmented dataset (~8,000 rows)
-├── crop-yield.csv           # Source multi-crop dataset
+├── APvenv/                  # Local Python Virtual Environment [GIT-IGNORED]
+├── .env                     # Local API environment secrets [GIT-IGNORED]
+├── .gitignore               # Excludes secrets, local venvs, and datasets from Git
+├── requirements.txt         # Python package dependencies
+├── README.md                # System documentation
 │
-├── evaluate/                # Evaluation scripts and results
-│   ├── evaluate_model_a.py  # Confusion matrix & classification report
-│   ├── evaluate_model_c.py  # R², MAE, feature importance plots
-│   └── *.png / *.txt        # Generated reports and charts
+├── yield-predict.csv        # Original maize yield dataset [GIT-IGNORED]
+├── yield-predict-augmented.csv # Augmented dataset [GIT-IGNORED]
+├── crop-yield.csv           # Source multi-crop dataset [GIT-IGNORED]
 │
-├── requirements.txt         # Python dependencies
-├── .gitignore
-└── README.md
+└── evaluate/                # Evaluation scripts and performance results
+    ├── evaluate_model_a.py  # Model A accuracy & confusion matrix script
+    ├── evaluate_model_c.py  # Model C R², MAE, residuals plotting script
+    └── *.png / *.txt        # Generated evaluation reports and charts
 ```
 
 ---
@@ -248,6 +250,7 @@ Interactive animated diagram showing the system architecture.
 | Input | 224×224 RGB leaf image |
 | Classes | Blight, Common Rust, Downy Mildew, Gray Leaf Spot, Healthy, MLN, MSV |
 | Dataset | 2,800+ maize leaf images |
+| Classification Acc | **97.86%** (validated on 560 images) |
 
 ### Model B — DSI Calculator
 | Property | Value |
@@ -262,6 +265,9 @@ Interactive animated diagram showing the system architecture.
 | Algorithm | Random Forest Regressor (scikit-learn) |
 | Features | N, P, K, Soil_pH, Soil_Moisture, Temperature, Humidity, Rainfall, Sunlight_Hours |
 | Dataset | ~8,000 rows (augmented from 1,659 maize records) |
+| Model R² Score | **0.8719** (Random Forest testing) |
+| Mean Abs Error (MAE) | **0.4579 tons/hectare** |
+| Root MSE (RMSE) | **0.6099 tons/hectare** |
 
 ### Model D — Health Adjustment
 | Property | Value |
