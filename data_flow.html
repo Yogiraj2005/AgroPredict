@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroPredict — Data Flow Architecture</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green:   #22c55e;
+            --green-d: #16a34a;
+            --green-l: #dcfce7;
+            --blue:    #3b82f6;
+            --blue-l:  #dbeafe;
+            --purple:  #8b5cf6;
+            --purple-l:#ede9fe;
+            --orange:  #f97316;
+            --orange-l:#ffedd5;
+            --text:    #111827;
+            --muted:   #6b7280;
+            --border:  #e5e7eb;
+            --bg:      #f9fafb;
+            --white:   #ffffff;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        /* ──── TOP NAV ──── */
+        nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 2.5rem;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav-logo-dot {
+            width: 28px; height: 28px;
+            background: var(--green);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.85rem;
+        }
+
+        .nav-back {
+            margin-left: auto;
+            text-decoration: none;
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+        .nav-back:hover { color: var(--text); }
+
+        /* ──── PAGE LAYOUT ──── */
+        .page { max-width: 1600px; margin: 0 auto; padding: 3rem 2rem; overflow-x: auto; }
+        
+        .header-text { text-align: center; margin-bottom: 3rem; }
+        .page-title { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+        .page-sub   { color: var(--muted); font-size: 1.1rem; }
+
+        /* ──── ARCHITECTURE DIAGRAM ──── */
+        .diagram-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            gap: 4rem;
+            padding: 2rem 0 4rem 0;
+            min-width: 1200px; /* Ensure it doesn't wrap awkwardly on small screens */
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 3rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Connecting Lines (SVG overlay) */
+        .svg-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        path.line {
+            fill: none;
+            stroke: #cbd5e1;
+            stroke-width: 3;
+            stroke-dasharray: 8 6;
+            animation: flow 1s linear infinite reverse;
+        }
+
+        path.line.path-a { stroke: var(--blue); }
+        path.line.path-b { stroke: var(--orange); }
+        path.line.path-merge { stroke: var(--green); }
+        path.line.path-llm { stroke: var(--purple); }
+
+        @keyframes flow {
+            to { stroke-dashoffset: 14; }
+        }
+
+        /* Node Styling */
+        .node {
+            background: var(--white);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            width: 240px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            position: relative;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+        }
+        
+        .node:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Pulse Animation for Models */
+        .node.model {
+            animation: breathe 4s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+            50% { box-shadow: 0 0 20px rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.5); }
+        }
+
+        .node-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 50px; height: 50px;
+            border-radius: 50%;
+        }
+
+        .node-title { font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; }
+        .node-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+        
+        .tag {
+            display: inline-block;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Color Variants for Nodes */
+        .node.input .node-icon { background: #f1f5f9; }
+        .node.input { border-style: dashed; }
+        
+        .node.path-a { border-color: var(--blue-l); }
+        .node.path-a .node-icon { background: var(--blue-l); color: var(--blue); }
+        .node.path-a .tag { background: var(--blue); color: white; }
+
+        .node.path-b { border-color: var(--orange-l); }
+        .node.path-b .node-icon { background: var(--orange-l); color: var(--orange); }
+        .node.path-b .tag { background: var(--orange); color: white; }
+
+        .node.path-merge { border-color: var(--green-l); }
+        .node.path-merge .node-icon { background: var(--green-l); color: var(--green-d); }
+        .node.path-merge .tag { background: var(--green); color: white; }
+
+        .node.llm { border-color: var(--purple-l); }
+        .node.llm .node-icon { background: var(--purple-l); color: var(--purple); }
+        .node.llm .tag { background: var(--purple); color: white; }
+        
+        .node.output { background: var(--text); color: white; border-color: var(--text); }
+        .node.output .node-icon { background: rgba(255,255,255,0.1); }
+        .node.output .node-desc { color: #9ca3af; }
+
+        .formula-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 6px;
+            font-family: monospace;
+            font-size: 0.7rem;
+            margin-top: 0.75rem;
+            color: #334155;
+            font-weight: 600;
+        }
+        
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a class="nav-logo" href="/">
+        <div class="nav-logo-dot">A</div>
+        AgroPredict
+    </a>
+    <a href="/" class="nav-back">
+        <span>←</span> Back to Dashboard
+    </a>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+    <div class="header-text">
+        <h1 class="page-title">How AgroPredict Works</h1>
+        <p class="page-sub">A visual breakdown of data flow and pipeline architecture.</p>
+    </div>
+
+    <div class="diagram-container" id="diagram">
+        <!-- SVG lines drawn via JS to connect elements dynamically -->
+        <svg class="svg-overlay" id="svgCanvas"></svg>
+
+        <!-- COL 1: INPUTS -->
+        <div class="col" style="justify-content: space-around; height: 100%;">
+            <div class="node input" id="node-img">
+                <div class="node-icon">📷</div>
+                <div class="node-title">Leaf Image</div>
+                <div class="node-desc">Farmer uploads a photo of the maize crop leaf.</div>
+            </div>
+            
+            <div style="height:100px;"></div> <!-- Spacer -->
+
+            <div class="node input" id="node-env">
+                <div class="node-icon">🌡️</div>
+                <div class="node-title">Environmental Data</div>
+                <div class="node-desc">Soil nutrients (NPK), pH, moisture, and weather metrics.</div>
+            </div>
+        </div>
+
+        <!-- COL 2: PRIMARY MODELS -->
+        <div class="col">
+            <div class="node model path-a" id="node-ma" style="margin-bottom: 2rem;">
+                <span class="tag">Model A</span>
+                <div class="node-icon">🧠</div>
+                <div class="node-title">Disease Classifier</div>
+                <div class="node-desc">EfficientNetV2-S CNN processes pixels to classify disease.</div>
+            </div>
+            
+            <div class="node model path-a" id="node-mb">
+                <span class="tag">Model B</span>
+                <div class="node-icon">🎨</div>
+                <div class="node-title">DSI Calculator</div>
+                <div class="node-desc">OpenCV HSV segmentation measures necrotic area percentage.</div>
+            </div>
+
+            <div style="height:2rem;"></div>
+
+            <div class="node model path-b" id="node-mc">
+                <span class="tag">Model C</span>
+                <div class="node-icon">🌲</div>
+                <div class="node-title">Yield Predictor</div>
+                <div class="node-desc">Random Forest predicts optimal potential yield from sensors.</div>
+            </div>
+        </div>
+
+        <!-- COL 3: MERGE POINT -->
+        <div class="col" style="justify-content: center; margin-top: 6rem;">
+            <div class="node model path-merge" id="node-md">
+                <span class="tag">Model D</span>
+                <div class="node-icon">⚖️</div>
+                <div class="node-title">Health Adjustment</div>
+                <div class="node-desc">Computes actual expected yield based on disease damage.</div>
+                <div class="formula-box">Final = Ideal × (1 - K × DSI)</div>
+            </div>
+        </div>
+
+        <!-- COL 4: LLM -->
+        <div class="col" style="justify-content: center;">
+            <div class="node model llm" id="node-llm">
+                <span class="tag">LLM / GenAI</span>
+                <div class="node-icon">✨</div>
+                <div class="node-title">Agronomist AI</div>
+                <div class="node-desc">Llama 3.2 digests all model outputs + env data to write tailored advice.</div>
+            </div>
+        </div>
+
+        <!-- COL 5: OUTPUT -->
+        <div class="col" style="justify-content: center;">
+            <div class="node output" id="node-out">
+                <div class="node-icon">📋</div>
+                <div class="node-title">Final Report</div>
+                <div class="node-desc">Actionable insights displayed on the dashboard.</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // Simple script to draw SVG lines between elements
+    function drawConnection(id1, id2, pathClass) {
+        const el1 = document.getElementById(id1);
+        const el2 = document.getElementById(id2);
+        const svg = document.getElementById('svgCanvas');
+        const container = document.getElementById('diagram');
+
+        if(!el1 || !el2 || !svg) return;
+
+        const rect1 = el1.getBoundingClientRect();
+        const rect2 = el2.getBoundingClientRect();
+        const contRect = container.getBoundingClientRect();
+
+        // Calculate center points relative to container
+        // Node width is 240, so half width is 120
+        const p1 = {
+            x: (rect1.left + rect1.width/2 - contRect.left) + 120, // Right edge
+            y: (rect1.top + rect1.height/2 - contRect.top)
+        };
+        const p2 = {
+            x: (rect2.left + rect2.width/2 - contRect.left) - 120, // Left edge
+            y: (rect2.top + rect2.height/2 - contRect.top)
+        };
+
+        // Create curved path (cubic bezier) handling horizontal curves
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        path.setAttribute('class', `line ${pathClass}`);
+        
+        let d;
+        if (p1.y === p2.y) { // Straight horizontal across
+             d = `M ${p1.x} ${p1.y} L ${p2.x} ${p2.y}`;
+        } else {
+             const curveX = Math.abs(p2.x - p1.x) / 2.5; // Stretch out the curve horizontally
+             d = `M ${p1.x} ${p1.y} C ${p1.x + curveX} ${p1.y}, ${p2.x - curveX} ${p2.y}, ${p2.x} ${p2.y}`;
+        }
+
+        path.setAttribute('d', d);
+        svg.appendChild(path);
+    }
+
+    function drawAll() {
+        const svg = document.getElementById('svgCanvas');
+        svg.innerHTML = ''; // Clear existing
+        
+        // Input -> Path A (Split to MA and MB)
+        drawConnection('node-img', 'node-ma', 'path-a');
+        drawConnection('node-img', 'node-mb', 'path-a');
+
+        // Input -> Path B (MC)
+        drawConnection('node-env', 'node-mc', 'path-b');
+
+        // MA & MB -> MD (Disease metrics passing horizontally)
+        drawConnection('node-mb', 'node-md', 'path-merge'); // DSI to MD
+        
+        // MC -> MD (Ideal yield passing horizontally)
+        drawConnection('node-mc', 'node-md', 'path-merge');
+
+        // All -> LLM
+        // Draw from the right edge of these nodes directly to the left edge of LLM
+        drawConnection('node-ma', 'node-llm', 'path-llm'); // Disease to LLM
+        drawConnection('node-env', 'node-llm', 'path-llm'); // Env to LLM
+        drawConnection('node-md', 'node-llm', 'path-llm'); // Final yield + DSI to LLM
+
+        // LLM -> Output
+        drawConnection('node-llm', 'node-out', 'path-merge');
+    }
+
+    // Draw on load and window resize
+    window.addEventListener('load', drawAll);
+    window.addEventListener('resize', drawAll);
+
+</script>
+</body>
+</html>

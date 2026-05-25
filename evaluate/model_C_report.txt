@@ -1,0 +1,4 @@
+R2 Score: 0.3089
+Mean Absolute Error: 1.1834 tons/ha
+Mean Squared Error: 2.1379
+Root MSE: 1.4622 tons/ha

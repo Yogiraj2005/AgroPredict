@@ -1,0 +1,32 @@
+
+/maize_R
+/unused
+/venv
+/APvenv
+/__pycache__
+
+# Model A
+model_a_weights_O.pth
+
+# Model C
+model_c.py
+model_c_config.json
+model_c_encoders.pkl
+model_c_scaler.pkl
+model_c_weights.pkl
+
+# data
+
+yield-predict-augmented.csv
+test_1-DM.jpg
+test_2-MLN.jpg
+test_3-CR.JPG
+test_4-B.JPG
+yield-predict.csv
+yield-predict1.csv
+crop-yield.csv
+
+# Secrets & Environment variables
+.env
+.env.local
+.env.*

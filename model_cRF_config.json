@@ -1,0 +1,26 @@
+{
+  "model_type": "random_forest",
+  "feature_names": [
+    "n",
+    "p",
+    "k",
+    "soil_ph",
+    "soil_moisture",
+    "temperature",
+    "humidity",
+    "rainfall",
+    "sunlight_hours"
+  ],
+  "metrics": {
+    "train_r2": 0.9651,
+    "test_r2": 0.8719,
+    "test_mae": 0.4579,
+    "test_rmse": 0.6099,
+    "cv_r2_mean": 0.8373
+  },
+  "data_stats": {
+    "total_samples": 8290,
+    "train_samples": 6632,
+    "test_samples": 1658
+  }
+}

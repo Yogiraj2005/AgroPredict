@@ -1,0 +1,26 @@
+Overall Accuracy: 0.9786
+
+Classification Report:
+                     precision    recall  f1-score   support
+
+             blight       0.95      0.95      0.95        82
+        common_rust       0.98      1.00      0.99        79
+       downy_mildew       0.99      1.00      0.99        66
+     gray_leaf_spot       0.96      0.94      0.95        84
+            healthy       1.00      0.97      0.98        87
+mln_lethal_necrosis       0.99      1.00      0.99        90
+   msv_streak_virus       0.99      1.00      0.99        72
+
+           accuracy                           0.98       560
+          macro avg       0.98      0.98      0.98       560
+       weighted avg       0.98      0.98      0.98       560
+
+
+Confusion Matrix (Raw):
+[[78  1  0  3  0  0  0]
+ [ 0 79  0  0  0  0  0]
+ [ 0  0 66  0  0  0  0]
+ [ 4  1  0 79  0  0  0]
+ [ 0  0  1  0 84  1  1]
+ [ 0  0  0  0  0 90  0]
+ [ 0  0  0  0  0  0 72]]

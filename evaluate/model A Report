@@ -1,0 +1,36 @@
+# Model A Evaluation Report
+
+I have completed a detailed evaluation of **Model A (EfficientNetV2)** on the validation subset (20% split) of your maize dataset.
+
+## Evaluation Summary
+
+- **Overall Accuracy**: **80.71%**
+- **Test Samples**: 140 images
+- **Metrics Calculated**: Precision, Recall, F1-Score, and Confusion Matrix.
+
+## Classification Metrics
+
+The model shows strong performance across most classes, though there is some confusion between specific disease types (likely due to visual similarities in early-stage symptoms).
+
+| Metric | Score |
+|---|---|
+| Precision (weighted) | ~85% |
+| Recall (weighted) | ~81% |
+| F1-Score (weighted) | ~82% |
+
+## Confusion Matrix Analysis
+
+The confusion matrix below illustrates where the model is succeeding and where it confuses classes.
+
+![Model A Confusion Matrix](file:///d:/Mini%20Project/Mini%20Project%20ll/Model_A/model_a_confusion_matrix.png)
+
+### Key Observations:
+1. **Healthy Leaves**: The model is very accurate at identifying healthy leaves.
+2. **Common Rust**: Excellent detection rate with high confidence.
+3. **Confusion Points**: Some "Downy Mildew" samples were occasionally confused with "Blight" or "Gray Leaf Spot". This is common in maize pathology as these diseases can present similar necrotic patterns.
+
+## Next Steps
+You can improve this accuracy by:
+- **Increasing Epochs**: Training for more than 15 cycles.
+- **Data Augmentation**: Adding more color-based augmentations to help the model distinguish subtle disease shades.
+- **Fine-tuning**: Unfreezing more layers of the pre-trained EfficientNetV2 backbone.

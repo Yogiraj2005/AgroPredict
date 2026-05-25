@@ -1,0 +1,7 @@
+blight
+common_rust
+downy_mildew
+gray_leaf_spot
+healthy
+mln_lethal_necrosis
+msv_streak_virus

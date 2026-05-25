@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgroPredict — Intelligence Dashboard</title>
+    <meta name="description" content="AI-driven maize disease diagnostics and yield estimation dashboard">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green:   #22c55e;
+            --green-d: #16a34a;
+            --green-l: #dcfce7;
+            --text:    #111827;
+            --muted:   #6b7280;
+            --border:  #e5e7eb;
+            --bg:      #f9fafb;
+            --white:   #ffffff;
+            --red:     #ef4444;
+            --red-l:   #fee2e2;
+            --yellow:  #f59e0b;
+            --yellow-l:#fef9c3;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ──── TOP NAV ──── */
+        nav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 2.5rem;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .nav-logo-dot {
+            width: 28px; height: 28px;
+            background: var(--green);
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.85rem;
+        }
+
+        .nav-status {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .status-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            animation: blink 2s infinite;
+        }
+        .status-dot.offline { background: var(--red); }
+
+        @keyframes blink {
+            0%,100% { opacity:1; }
+            50%      { opacity:0.3; }
+        }
+
+        /* ──── PAGE LAYOUT ──── */
+        .page { max-width: 1200px; margin: 0 auto; padding: 2.5rem 2rem; }
+
+        .page-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .page-sub   { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+
+        .grid { display: grid; grid-template-columns: 360px 1fr; gap: 1.5rem; align-items: start; }
+
+        /* ──── WHITE CARD ──── */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+        }
+
+        .card-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        /* ──── UPLOAD ZONE ──── */
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 2.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--green);
+            background: var(--green-l);
+        }
+
+        .upload-zone.has-image {
+            padding: 0.75rem;
+            border-style: solid;
+            border-color: var(--green);
+        }
+
+        .upload-icon {
+            width: 48px; height: 48px;
+            background: var(--green-l);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .upload-zone p { font-size: 0.875rem; color: var(--muted); }
+        .upload-zone strong { color: var(--text); font-weight: 500; }
+
+        /* ──── FIELD GRID ──── */
+        .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1.25rem; }
+
+        .field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 4px; font-weight: 500; }
+        .field input {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.875rem;
+            outline: none;
+            background: var(--bg);
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .field input:focus {
+            border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+        }
+
+        .field input.invalid {
+            border-color: var(--red);
+            box-shadow: 0 0 0 3px rgba(239,68,68,.12);
+            animation: shake .3s ease;
+        }
+
+        .field .hint {
+            font-size: 0.68rem;
+            color: var(--red);
+            margin-top: 3px;
+            display: none;
+        }
+
+        .field .hint.visible { display: block; }
+
+        @keyframes shake {
+            0%,100% { transform: translateX(0); }
+            25%     { transform: translateX(-4px); }
+            75%     { transform: translateX(4px); }
+        }
+
+        /* ──── BUTTON ──── */
+        .btn {
+            width: 100%;
+            margin-top: 1.25rem;
+            padding: 12px;
+            background: var(--green);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .2s, transform .1s, box-shadow .2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) { background: var(--green-d); box-shadow: 0 4px 14px rgba(34,197,94,.35); }
+        .btn:active:not(:disabled) { transform: scale(.97); }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* ──── RESULT COLUMN ──── */
+        .result-col { display: flex; flex-direction: column; gap: 1.25rem; }
+
+        /* ──── KPI STRIP ──── */
+        .kpi-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+
+        .kpi {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow .3s, transform .2s;
+        }
+
+        .kpi:hover { box-shadow: 0 4px 20px rgba(0,0,0,.06); transform: translateY(-2px); }
+
+        .kpi-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .kpi .kpi-label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
+        .kpi .kpi-val   { font-size: 1.65rem; font-weight: 700; margin: 4px 0; letter-spacing: -.5px; }
+        .kpi .kpi-sub   { font-size: 0.8rem; color: var(--muted); }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+
+        .badge-red    { background: var(--red-l); color: var(--red); }
+        .badge-green  { background: var(--green-l); color: var(--green-d); }
+        .badge-yellow { background: var(--yellow-l); color: #92400e; }
+
+        /* ──── DIVIDER LINE ──── */
+        .kpi-topline {
+            height: 4px;
+            border-radius: 4px 4px 0 0;
+            position: absolute;
+            top: 0; left: 0; right: 0;
+        }
+
+        /* ──── DSI PROGRESS BAR ──── */
+        .dsi-bar-wrapper {
+            margin-top: 0.75rem;
+        }
+        .dsi-bar-track {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .dsi-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.8s cubic-bezier(.4,0,.2,1);
+        }
+        .dsi-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ──── LLM PANEL ──── */
+        .llm-panel {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .llm-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--green-l);
+        }
+
+        .llm-avatar {
+            width: 36px; height: 36px;
+            background: var(--green);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white;
+            font-size: 1rem;
+        }
+
+        .llm-title   { font-weight: 600; font-size: 0.95rem; }
+        .llm-powered { font-size: 0.75rem; color: var(--green-d); font-weight: 500; }
+
+        .llm-body { padding: 1.5rem; line-height: 1.7; }
+
+        .section-pill {
+            display: inline-block;
+            background: var(--green-l);
+            color: var(--green-d);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-bottom: 0.5rem;
+        }
+
+        .llm-body h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 1.25rem 0 0.4rem;
+        }
+
+        .llm-body h3:first-of-type { margin-top: 0; }
+
+        .llm-body p, .llm-body ul {
+            font-size: 0.875rem;
+            color: #374151;
+            line-height: 1.65;
+        }
+
+        .llm-body li { margin-left: 1.2rem; margin-bottom: 0.3rem; }
+
+        /* ──── TOAST / ERROR ──── */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--red);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            box-shadow: 0 8px 30px rgba(239,68,68,0.35);
+            z-index: 1000;
+            animation: slideUp .3s ease;
+        }
+        .toast.warn { background: var(--yellow); color: #78350f; box-shadow: 0 8px 30px rgba(245,158,11,0.35); }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+
+        /* ──── SPINNER ──── */
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ──── SKELETON / SHIMMER ──── */
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: 6px;
+        }
+        @keyframes shimmer {
+            0%   { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        .skeleton-kpi {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+        }
+        .skeleton-row { display: flex; flex-direction: column; gap: 1.25rem; }
+        .skeleton-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+
+        /* ──── RESPONSIVE ──── */
+        @media (max-width: 800px) {
+            .grid { grid-template-columns: 1fr; }
+            .kpi-strip { grid-template-columns: 1fr 1fr; }
+            .skeleton-strip { grid-template-columns: 1fr 1fr; }
+            nav { padding: 0 1.25rem; }
+            .page { padding: 1.5rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <a class="nav-logo" href="/">
+        <div class="nav-logo-dot">A</div>
+        AgroPredict
+    </a>
+    
+    <div style="margin-left: 57rem;">
+        <a href="/data_flow" style="display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--green-d); font-size: 0.9rem; font-weight: 600; background: var(--green-l); padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(34,197,94,0.3); transition: all 0.2s;">
+            System Architecture
+        </a>
+    </div>
+
+    <div class="nav-status">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Checking models…</span>
+    </div>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+    <h1 class="page-title">Crop Analysis</h1>
+    <p class="page-sub">Upload a leaf image and enter soil & weather data to run a full diagnostic report.</p>
+
+    <div class="grid">
+
+        <!-- ── LEFT: INPUTS ── -->
+        <div>
+            <div class="card">
+                <div class="card-label">Leaf Image</div>
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('imgInput').click()">
+                    <div class="upload-icon" id="uploadIcon">🌿</div>
+                    <strong id="uploadTitle">Click to upload leaf image</strong>
+                    <p id="uploadHint">Supports JPG, PNG — max 10 MB</p>
+                    <input id="imgInput" type="file" accept="image/*" style="display:none" onchange="previewImage(event)">
+                </div>
+
+                <img id="imgPreview" src="" alt="Leaf preview" style="display:none; width:100%; border-radius:10px; margin-top:1rem; max-height:220px; object-fit:cover;">
+
+                <div class="card-label" style="margin-top:1.5rem;">Soil & Weather Data</div>
+                <div class="fields">
+                    <div class="field">
+                        <label>Nitrogen (N)</label>
+                        <input type="number" value="80" id="fN" min="1" max="300">
+                        <div class="hint" id="hintN">Range: 1 – 300</div>
+                    </div>
+                    <div class="field">
+                        <label>Phosphorus (P)</label>
+                        <input type="number" value="45" id="fP" min="1" max="200">
+                        <div class="hint" id="hintP">Range: 1 – 200</div>
+                    </div>
+                    <div class="field">
+                        <label>Potassium (K)</label>
+                        <input type="number" value="60" id="fK" min="1" max="300">
+                        <div class="hint" id="hintK">Range: 1 – 300</div>
+                    </div>
+                    <div class="field">
+                        <label>Soil pH</label>
+                        <input type="number" step="0.1" value="6.5" id="fPH" min="3.5" max="9.5">
+                        <div class="hint" id="hintPH">Must be 3.5 – 9.5 (agricultural range)</div>
+                    </div>
+                    <div class="field">
+                        <label>Moisture (%)</label>
+                        <input type="number" value="25" id="fMoist" min="5" max="100">
+                        <div class="hint" id="hintMoist">Must be ≥ 5% (below = wilting point)</div>
+                    </div>
+                    <div class="field">
+                        <label>Temperature (°C)</label>
+                        <input type="number" value="26" id="fTemp" min="5" max="45">
+                        <div class="hint" id="hintTemp">Must be 5 – 45°C (maize growing range)</div>
+                    </div>
+                    <div class="field">
+                        <label>Humidity (%)</label>
+                        <input type="number" value="60" id="fHumid" min="10" max="100">
+                        <div class="hint" id="hintHumid">Must be ≥ 10% (0% is physically impossible)</div>
+                    </div>
+                    <div class="field">
+                        <label>Rainfall (mm)</label>
+                        <input type="number" value="900" id="fRain" min="0" max="5000">
+                        <div class="hint" id="hintRain">Range: 0 – 5000 mm</div>
+                    </div>
+                    <div class="field" style="grid-column:1/-1">
+                        <label>Sunlight Hours</label>
+                        <input type="number" value="8" id="fSun" min="1" max="16" step="0.1">
+                        <div class="hint" id="hintSun">Must be 1 – 16 hrs (crops need light)</div>
+                    </div>
+                </div>
+
+                <button class="btn" id="analyzeBtn" onclick="runAnalysis()">
+                    <span id="btnIcon">⚡</span>
+                    <span id="btnText">Run AI Analysis</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── RIGHT: RESULTS ── -->
+        <div class="result-col" id="resultCol" style="display:none">
+
+            <!-- CROP BANNER -->
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="background:var(--green-l);padding:6px 16px;border-radius:8px;display:flex;align-items:center;gap:8px;">
+                    <span style="font-size:1.1rem;">🌽</span>
+                    <span style="font-weight:600;color:var(--green-d);font-size:0.9rem;">Crop: Maize</span>
+                </div>
+            </div>
+
+            <!-- KPI ROW -->
+            <div class="kpi-strip">
+
+                <div class="kpi">
+                    <div class="kpi-topline" style="background:linear-gradient(to right,#ef4444,#f97316)"></div>
+                    <div class="kpi-icon" style="background:#fee2e2;">🦠</div>
+                    <div class="kpi-label">Disease Detected</div>
+                    <div class="kpi-val" id="kpiDisease">—</div>
+                    <div class="kpi-sub" id="kpiConf"></div>
+                    <div><span class="badge badge-red" id="kpiSeverity"></span></div>
+                    <div class="dsi-bar-wrapper">
+                        <div class="dsi-bar-track">
+                            <div class="dsi-bar-fill" id="dsiFill" style="width:0%; background: var(--green);"></div>
+                        </div>
+                        <div class="dsi-bar-label">
+                            <span>0%</span>
+                            <span id="dsiLabel">Affected: 0%</span>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi">
+                    <div class="kpi-topline" style="background:linear-gradient(to right,#22c55e,#16a34a)"></div>
+                    <div class="kpi-icon" style="background:#dcfce7;">🌾</div>
+                    <div class="kpi-label">Final Yield (Health-adj.)</div>
+                    <div class="kpi-val" id="kpiYield">—</div>
+                    <div class="kpi-sub" id="kpiIdeal"></div>
+                    <div><span class="badge badge-red" id="kpiLoss"></span></div>
+                </div>
+            </div>
+
+            <!-- LLM PANEL -->
+            <div class="llm-panel">
+                <div class="llm-header">
+                    <div class="llm-avatar">✦</div>
+                    <div>
+                        <div class="llm-title">AI Agronomist Report</div>
+                        <div class="llm-powered" id="llmPowered">Powered by Llama 3.2 via Ollama</div>
+                    </div>
+                </div>
+                <div class="llm-body" id="llmBody">
+                    <!-- filled by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Skeleton loading state -->
+        <div id="skeletonState" class="result-col" style="display:none">
+            <div class="skeleton-strip">
+                <div class="skeleton-kpi">
+                    <div class="shimmer" style="width:36px;height:36px;border-radius:10px;margin-bottom:0.75rem;"></div>
+                    <div class="shimmer" style="width:60%;height:10px;margin-bottom:8px;"></div>
+                    <div class="shimmer" style="width:80%;height:22px;margin-bottom:8px;"></div>
+                    <div class="shimmer" style="width:50%;height:10px;margin-bottom:12px;"></div>
+                    <div class="shimmer" style="width:100%;height:6px;"></div>
+                </div>
+                <div class="skeleton-kpi">
+                    <div class="shimmer" style="width:36px;height:36px;border-radius:10px;margin-bottom:0.75rem;"></div>
+                    <div class="shimmer" style="width:60%;height:10px;margin-bottom:8px;"></div>
+                    <div class="shimmer" style="width:80%;height:22px;margin-bottom:8px;"></div>
+                    <div class="shimmer" style="width:50%;height:10px;"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="shimmer" style="width:40%;height:12px;margin-bottom:1rem;"></div>
+                <div class="shimmer" style="width:100%;height:10px;margin-bottom:8px;"></div>
+                <div class="shimmer" style="width:90%;height:10px;margin-bottom:8px;"></div>
+                <div class="shimmer" style="width:95%;height:10px;margin-bottom:8px;"></div>
+                <div class="shimmer" style="width:70%;height:10px;margin-bottom:1.5rem;"></div>
+                <div class="shimmer" style="width:40%;height:12px;margin-bottom:1rem;"></div>
+                <div class="shimmer" style="width:100%;height:10px;margin-bottom:8px;"></div>
+                <div class="shimmer" style="width:85%;height:10px;margin-bottom:8px;"></div>
+                <div class="shimmer" style="width:60%;height:10px;"></div>
+            </div>
+        </div>
+
+        <!-- Empty state while no results -->
+        <div id="emptyState" class="result-col">
+            <div class="card" style="text-align:center;padding:3rem;">
+                <div style="font-size:2.5rem;margin-bottom:1rem;">📊</div>
+                <div style="font-weight:600;margin-bottom:0.5rem;">No analysis yet</div>
+                <p style="color:var(--muted);font-size:0.875rem;">Fill in the form on the left and press <strong>Run AI Analysis</strong> to see results here.</p>
+            </div>
+        </div>
+
+</div>
+
+<script>
+    const API_BASE = window.location.origin;
+
+    // ── Check backend health on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const r = await fetch(`${API_BASE}/health`);
+            const d = await r.json();
+            document.getElementById('statusDot').classList.remove('offline');
+            document.getElementById('statusText').textContent =
+                `Models: A ${d.models.model_a ? '✓' : '✗'} • C(RF) ${d.models.model_cRF ? '✓' : '✗'}`;
+        } catch {
+            document.getElementById('statusDot').classList.add('offline');
+            document.getElementById('statusText').textContent = 'Backend offline';
+        }
+    });
+
+    // ── Preview image when selected
+    function previewImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const img = document.getElementById('imgPreview');
+            img.src = ev.target.result;
+            img.style.display = 'block';
+            document.getElementById('uploadTitle').textContent = file.name;
+            document.getElementById('uploadHint').textContent = `${(file.size / 1024).toFixed(0)} KB`;
+            document.getElementById('uploadZone').classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // ── Toast notification
+    function showToast(msg, type = 'error') {
+        const t = document.createElement('div');
+        t.className = `toast ${type === 'warn' ? 'warn' : ''}`;
+        t.textContent = msg;
+        document.body.appendChild(t);
+        setTimeout(() => t.remove(), 5000);
+    }
+
+    // ── Severity badge colour helper
+    function severityBadge(severity) {
+        const s = severity.toLowerCase();
+        if (s === 'healthy') return 'badge-green';
+        if (s === 'mild')    return 'badge-yellow';
+        return 'badge-red';
+    }
+
+    // ── DSI bar colour
+    function dsiColor(dsi) {
+        if (dsi < 0.3) return 'var(--green)';
+        if (dsi < 0.7) return 'var(--yellow)';
+        return 'var(--red)';
+    }
+
+    // ── Robust markdown renderer for LLM output
+    function renderLLM(text) {
+        const lines = text.split('\n');
+        let html = '';
+        let inList = false;
+        let listDepth = 0; // 0 = not in list, 1 = top-level, 2 = nested
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+
+            // Bold: **text**
+            line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Italic: *text* (but not ** which is bold)
+            line = line.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+            // Inline code: `text`
+            line = line.replace(/`([^`]+)`/g, '<code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-size:0.82em;">$1</code>');
+
+            // Headers: ### / ## / # or "1. **Title**" or "1. Title"
+            const h3Match = line.match(/^#{1,3}\s+(.+)$/);
+            const numBoldMatch = line.match(/^\d+\.\s+<strong>(.+?)<\/strong>:?\s*$/);
+            const numHeaderMatch = line.match(/^\d+\.\s+([A-Z][^.]*(?:\s+[A-Z][^.]*)*)$/);
+
+            if (h3Match || numBoldMatch || numHeaderMatch) {
+                // Close any open list
+                if (listDepth >= 2) { html += '</ul>'; listDepth = 1; }
+                if (listDepth >= 1) { html += '</ul>'; listDepth = 0; inList = false; }
+
+                const title = h3Match ? h3Match[1] : (numBoldMatch ? numBoldMatch[1] : numHeaderMatch[1]);
+                html += `<h3 style="margin:1.25rem 0 0.4rem;font-size:0.95rem;font-weight:600;">${title}</h3>`;
+                continue;
+            }
+
+            // Sub-bullet: + item or  - item (indented)
+            const subBulletMatch = line.match(/^\s{2,}[\+\-]\s+(.+)$/);
+            if (subBulletMatch) {
+                if (listDepth < 1) { html += '<ul>'; listDepth = 1; inList = true; }
+                if (listDepth < 2) { html += '<ul style="margin-left:1rem;">'; listDepth = 2; }
+                html += `<li>${subBulletMatch[1]}</li>`;
+                continue;
+            }
+
+            // Top-level bullet: * item, - item, + item, • item
+            const bulletMatch = line.match(/^[\*\-\+•]\s+(.+)$/);
+            if (bulletMatch) {
+                if (listDepth >= 2) { html += '</ul>'; listDepth = 1; }
+                if (listDepth < 1) { html += '<ul>'; listDepth = 1; inList = true; }
+                html += `<li>${bulletMatch[1]}</li>`;
+                continue;
+            }
+
+            // Empty line — close lists, add paragraph break
+            if (line.trim() === '') {
+                if (listDepth >= 2) { html += '</ul>'; listDepth = 1; }
+                if (listDepth >= 1) { html += '</ul>'; listDepth = 0; inList = false; }
+                html += '<br>';
+                continue;
+            }
+
+            // Regular text line
+            if (listDepth >= 2) { html += '</ul>'; listDepth = 1; }
+            if (listDepth >= 1) { html += '</ul>'; listDepth = 0; inList = false; }
+            html += `<p style="margin:0.3rem 0;">${line}</p>`;
+        }
+
+        // Close any remaining open lists
+        if (listDepth >= 2) html += '</ul>';
+        if (listDepth >= 1) html += '</ul>';
+
+        return html;
+    }
+
+    // ══════════════════════════════════════════════
+    //  INPUT VALIDATION (Agronomic Bounds)
+    // ══════════════════════════════════════════════
+    const VALIDATION_RULES = [
+        { id: 'fN',     hint: 'hintN',     label: 'Nitrogen (N)',     min: 1,   max: 300  },
+        { id: 'fP',     hint: 'hintP',     label: 'Phosphorus (P)',   min: 1,   max: 200  },
+        { id: 'fK',     hint: 'hintK',     label: 'Potassium (K)',    min: 1,   max: 300  },
+        { id: 'fPH',    hint: 'hintPH',    label: 'Soil pH',          min: 3.5, max: 9.5  },
+        { id: 'fMoist', hint: 'hintMoist', label: 'Soil Moisture',    min: 5,   max: 100  },
+        { id: 'fTemp',  hint: 'hintTemp',  label: 'Temperature',      min: 5,   max: 45   },
+        { id: 'fHumid', hint: 'hintHumid', label: 'Humidity',         min: 10,  max: 100  },
+        { id: 'fRain',  hint: 'hintRain',  label: 'Rainfall',         min: 0,   max: 5000 },
+        { id: 'fSun',   hint: 'hintSun',   label: 'Sunlight Hours',   min: 1,   max: 16   },
+    ];
+
+    function validateInputs() {
+        const errors = [];
+        VALIDATION_RULES.forEach(rule => {
+            const input = document.getElementById(rule.id);
+            const hint  = document.getElementById(rule.hint);
+            const val   = parseFloat(input.value);
+
+            if (isNaN(val) || val < rule.min || val > rule.max) {
+                input.classList.add('invalid');
+                hint.classList.add('visible');
+                errors.push(`${rule.label} must be between ${rule.min} and ${rule.max}.`);
+            } else {
+                input.classList.remove('invalid');
+                hint.classList.remove('visible');
+            }
+        });
+        return errors;
+    }
+
+    // Clear validation error on input change
+    VALIDATION_RULES.forEach(rule => {
+        document.getElementById(rule.id).addEventListener('input', () => {
+            const input = document.getElementById(rule.id);
+            const hint  = document.getElementById(rule.hint);
+            const val   = parseFloat(input.value);
+            if (!isNaN(val) && val >= rule.min && val <= rule.max) {
+                input.classList.remove('invalid');
+                hint.classList.remove('visible');
+            }
+        });
+    });
+
+    // ══════════════════════════════════════════════
+    //  RUN ANALYSIS — calls POST /analyze
+    // ══════════════════════════════════════════════
+    async function runAnalysis() {
+        const btn  = document.getElementById('analyzeBtn');
+        const file = document.getElementById('imgInput').files[0];
+
+        // Validations
+        if (!file) { showToast('Please select a leaf image first.', 'warn'); return; }
+
+        const vErrors = validateInputs();
+        if (vErrors.length > 0) {
+            showToast(vErrors[0], 'warn');
+            return;
+        }
+
+        // Set loading state — show skeleton, hide empty & results
+        btn.disabled = true;
+        document.getElementById('btnIcon').innerHTML = '<div class="spinner"></div>';
+        document.getElementById('btnText').textContent = 'Analyzing…';
+        document.getElementById('emptyState').style.display   = 'none';
+        document.getElementById('resultCol').style.display    = 'none';
+        document.getElementById('skeletonState').style.display = 'flex';
+
+        // Build form data
+        const envData = JSON.stringify({
+            n:              parseFloat(document.getElementById('fN').value),
+            p:              parseFloat(document.getElementById('fP').value),
+            k:              parseFloat(document.getElementById('fK').value),
+            soil_ph:        parseFloat(document.getElementById('fPH').value),
+            soil_moisture:  parseFloat(document.getElementById('fMoist').value),
+            temperature:    parseFloat(document.getElementById('fTemp').value),
+            humidity:       parseFloat(document.getElementById('fHumid').value),
+            rainfall:       parseFloat(document.getElementById('fRain').value),
+            sunlight_hours: parseFloat(document.getElementById('fSun').value)
+        });
+
+        const fd = new FormData();
+        fd.append('image', file);
+        fd.append('env_data', envData);
+
+        try {
+            const resp = await fetch(`${API_BASE}/analyze`, { method: 'POST', body: fd });
+
+            if (!resp.ok) {
+                const err = await resp.json();
+                throw new Error(err.detail || `Server error ${resp.status}`);
+            }
+
+            const data = await resp.json();
+            const dr = data.disease_report;
+            const yr = data.yield_report;
+            const ai = data.ai_recommendation;
+
+            // ─── Disease KPI ───
+            document.getElementById('kpiDisease').textContent  = dr.disease_name;
+            document.getElementById('kpiConf').textContent      = `Confidence: ${(dr.confidence_score * 100).toFixed(1)}%`;
+
+            const sevBadge = document.getElementById('kpiSeverity');
+            sevBadge.textContent = `● ${dr.severity}`;
+            sevBadge.className   = `badge ${severityBadge(dr.severity)}`;
+
+            // DSI bar
+            const dsiFill = document.getElementById('dsiFill');
+            dsiFill.style.width = `${(dr.dsi * 100).toFixed(1)}%`;
+            dsiFill.style.background = dsiColor(dr.dsi);
+            document.getElementById('dsiLabel').textContent = `Affected: ${dr.affected_area_percent}%`;
+
+            // ─── Yield KPI ───
+            document.getElementById('kpiYield').textContent = `${yr.final_yield} t/ha`;
+            document.getElementById('kpiIdeal').textContent = `Ideal: ${yr.ideal_yield} t/ha`;
+            document.getElementById('kpiLoss').textContent  = `▼ ${yr.yield_loss_percentage}% Yield Loss`;
+
+            // ─── LLM Report ───
+            if (ai.model_used) {
+                document.getElementById('llmPowered').textContent = `Powered by ${ai.model_used} via Ollama`;
+            }
+
+            if (ai.status === 'success') {
+                document.getElementById('llmBody').innerHTML = renderLLM(ai.recommendation);
+            } else {
+                document.getElementById('llmBody').innerHTML = `
+                    <div style="display:flex;gap:10px;align-items:flex-start;padding:1rem;background:var(--yellow-l);border-radius:10px;">
+                        <span style="font-size:1.2rem;">⚠️</span>
+                        <div>
+                            <strong style="display:block;margin-bottom:4px;">LLM Unavailable</strong>
+                            <span style="font-size:0.85rem;color:#78350f;">${ai.recommendation}</span>
+                        </div>
+                    </div>`;
+            }
+
+            // ─── Show results, hide skeleton ───
+            document.getElementById('skeletonState').style.display = 'none';
+            document.getElementById('emptyState').style.display    = 'none';
+            document.getElementById('resultCol').style.display     = 'flex';
+
+            // Success button state
+            document.getElementById('btnIcon').innerHTML = '';
+            document.getElementById('btnIcon').textContent = '✓';
+            document.getElementById('btnText').textContent = 'Analysis Complete';
+            btn.style.background = 'var(--green-d)';
+
+            setTimeout(() => {
+                document.getElementById('btnIcon').textContent = '⚡';
+                document.getElementById('btnText').textContent = 'Run AI Analysis';
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 3000);
+
+        } catch (err) {
+            showToast(`Analysis failed: ${err.message}`);
+            // Hide skeleton, restore empty state
+            document.getElementById('skeletonState').style.display = 'none';
+            document.getElementById('emptyState').style.display    = 'flex';
+            document.getElementById('btnIcon').textContent = '⚡';
+            document.getElementById('btnText').textContent = 'Run AI Analysis';
+            btn.style.background = '';
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
