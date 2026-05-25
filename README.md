@@ -115,18 +115,20 @@ Model_A/
 
 ```bash
 git clone <your-repo-url>
-cd "Model_A"
+cd "AgroPredict"
 
 # Create virtual environment
-python -m venv venv
+python -m venv APvenv
 
 # Activate it
-# Windows:
-.\venv\Scripts\activate
+# Windows (PowerShell):
+.\APvenv\Scripts\activate
+# Windows (CMD):
+.\APvenv\Scripts\activate.bat
 # Linux/Mac:
-source venv/bin/activate
+source APvenv/bin/activate
 
-# Install dependencies
+# Install dependencies (automatically includes python-dotenv)
 pip install -r requirements.txt
 ```
 
@@ -139,10 +141,18 @@ ollama pull llama3.2
 ollama serve
 ```
 
-**Option B — Cloud Gemini (needs API key):**
+**Option B — Environment File (Recommended - .env):**
+Create a `.env` file in the root directory. The application is integrated with `python-dotenv` and will automatically load secrets at startup:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+**Option C — Terminal Environment Variables:**
+Alternatively, set the key directly in your active shell before starting the server:
 ```bash
-# Get your key from https://aistudio.google.com/apikey
-# Windows:
+# Windows (PowerShell):
+$env:GEMINI_API_KEY="your_key_here"
+# Windows (CMD):
 set GEMINI_API_KEY=your_key_here
 # Linux/Mac:
 export GEMINI_API_KEY=your_key_here
