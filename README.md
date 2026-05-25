@@ -277,6 +277,24 @@ Interactive animated diagram showing the system architecture.
 
 ---
 
+## 📊 Datasets
+
+The machine learning and deep learning pipelines are trained and validated on the following specialized agricultural datasets:
+
+### 1. Maize Leaf Disease Image Dataset (Model A)
+*   **Dataset Name:** [PlantVillage-Dataset](https://www.kaggle.com/datasets) (Curated subset)
+*   **Size:** **2,800+** high-resolution RGB images of maize crop leaves.
+*   **Classes:** 7 diagnostic categories (`Blight`, `Common Rust`, `Downy Mildew`, `Gray Leaf Spot`, `Healthy`, `Maize Lethal Necrosis (MLN)`, and `Maize Streak Virus (MSV)`).
+
+### 2. Maize Crop Yield Prediction Dataset (Model C)
+*   **Dataset Name:** [Crop Recommendation Dataset](https://www.kaggle.com/datasets) (Agrotechnological environmental records)
+*   **Dataset Files:**
+    *   `yield-predict.csv` — The original dataset containing **1,659 records** mapping 9 soil and weather sensor features (N, P, K, pH, Moisture, Temp, Humidity, Rain, Sunlight) to dry-weight maize yield (tons/hectare).
+    *   `yield-predict-augmented.csv` — The finalized training set containing **8,290 records**, generated using advanced Gaussian noise data augmentation with agronomic boundary clipping (via `augment_data.py`).
+    *   `crop-yield.csv` — Standard parent multi-crop agricultural dataset.
+
+---
+
 ## 🌐 Input Validation (Agronomic Bounds)
 
 The dashboard enforces scientifically accurate ranges:
